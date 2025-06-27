@@ -166,6 +166,19 @@
         #level-complete h2 {
             color: #27ae60;
         }
+
+        /* 新增的下一關按鈕樣式 */
+        #next-level-btn {
+            background-color: #3498db;
+            color: white;
+            margin-top: 20px;
+            padding: 12px 25px;
+            font-size: 1.1em;
+        }
+
+        #next-level-btn:hover {
+            background-color: #2980b9;
+        }
     </style>
 </head>
 <body>
@@ -193,7 +206,7 @@
             <h2>關卡完成！</h2>
             <p>恭喜你完成營養知識問答！</p>
             <p>你的最終分數是: <span id="final-score">0</span>/100</p>
-            <button id="next-level-btn">下一關</button>
+            <a href="4.html"><button id="next-level-btn">前往第4關</button></a>
         </div>
     </div>
 
@@ -348,6 +361,8 @@
             document.getElementById('next-btn').disabled = true;
             document.getElementById('level-complete').style.display = 'none';
             document.getElementById('fact-display').style.display = 'none';
+            document.getElementById('quiz-area').style.display = 'block';
+            document.getElementById('controls').style.display = 'flex';
             
             // 載入問題
             loadQuestion();
@@ -485,13 +500,9 @@
         // 事件監聽器
         document.getElementById('next-btn').addEventListener('click', nextQuestion);
         document.getElementById('restart-btn').addEventListener('click', initGame);
-        document.getElementById('next-level-btn').addEventListener('click', function() {
-            alert('恭喜完成本關！在完整遊戲中將進入下一關。');
-        });
         
         // 初始化遊戲
         initGame();
-    
     </script>
 </body>
 </html>

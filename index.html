@@ -99,6 +99,51 @@
       z-index: 100;
       text-align: center;
     }
+
+    /* 新增的遊戲說明樣式 */
+    #game-instructions {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 50;
+    }
+
+    #instructions-button {
+      background-color: #3498db;
+    }
+
+    #instructions-button:hover {
+      background-color: #2980b9;
+    }
+
+    #instructions-modal {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    #instructions-content {
+      max-width: 600px;
+      background-color: #2c3e50;
+      padding: 20px;
+      border-radius: 10px;
+    }
   </style>
 </head>
 <body>
@@ -106,6 +151,37 @@
     <div id="game-ui">
       <div>分數: <span id="score-display">0</span>/100</div>
       <button id="restart-level">重新開始</button>
+    </div>
+
+    <!-- 新增的遊戲說明按鈕 -->
+    <div id="game-instructions">
+      <button id="instructions-button">遊戲說明</button>
+    </div>
+
+    <!-- 新增的遊戲說明模態框 -->
+    <div id="instructions-modal">
+      <div id="instructions-content">
+        <h2>消除飢餓大作戰 - 遊戲說明</h2>
+        <h3>遊戲目標</h3>
+        <p>將食物拖放到飢餓地區，幫助消除飢餓，達到100分即可完成關卡。</p>
+        
+        <h3>操作方法</h3>
+        <ol>
+          <li>點擊並拖動食物圖標（🌾🍎🥩🧀等）</li>
+          <li>將食物拖放到紅色虛線圈標記的飢餓地區（非洲、南亞、拉丁美洲）</li>
+          <li>成功投放食物可獲得10分</li>
+          <li>當分數達到100分時，關卡完成</li>
+        </ol>
+        
+        <h3>遊戲提示</h3>
+        <ul>
+          <li>食物會從上方隨機位置出現</li>
+          <li>同時最多會有5個食物在畫面上</li>
+          <li>點擊"重新開始"按鈕可以重置關卡</li>
+        </ul>
+        
+        <button id="close-instructions">開始遊戲</button>
+      </div>
     </div>
 
     <div id="level-complete">
@@ -134,7 +210,24 @@
 
     function initGame() {
       document.getElementById('restart-level').addEventListener('click', restartLevel);
-      setupLevel();
+      
+      // 新增的遊戲說明按鈕事件
+      document.getElementById('instructions-button').addEventListener('click', showInstructions);
+      document.getElementById('close-instructions').addEventListener('click', hideInstructions);
+      
+      // 首次進入遊戲時顯示說明
+      showInstructions();
+    }
+
+    function showInstructions() {
+      document.getElementById('instructions-modal').style.display = 'flex';
+    }
+
+    function hideInstructions() {
+      document.getElementById('instructions-modal').style.display = 'none';
+      if (score === 0 && foodCount === 0) {
+        setupLevel();
+      }
     }
 
     function setupLevel() {
@@ -242,7 +335,7 @@
       const container = document.getElementById('game-container');
       const elementsToRemove = [];
       container.childNodes.forEach(child => {
-        if (child.id !== 'game-ui' && child.id !== 'level-complete') {
+        if (child.id !== 'game-ui' && child.id !== 'level-complete' && child.id !== 'game-instructions' && child.id !== 'instructions-modal') {
           elementsToRemove.push(child);
         }
       });

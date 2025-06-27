@@ -211,7 +211,7 @@
             <h2>救援網絡完成！</h2>
             <p>你成功建立了食物救援網絡！</p>
             <p>你的最終分數是: <span id="final-score">0</span>/100</p> <!-- 添加了總分顯示 -->
-            <button id="next-level-btn">下一關</button>
+            <button id="next-level-btn" onclick="window.location.href='5.html'">下一關</button>
         </div>
     </div>
 
@@ -462,9 +462,6 @@
         
         // 事件監聽器
         document.getElementById('restart-btn').addEventListener('click', initGame);
-        document.getElementById('next-level-btn').addEventListener('click', function() {
-            alert('恭喜完成本關！在完整遊戲中將進入下一關。');
-        });
         
         // 初始化遊戲
         initGame();
