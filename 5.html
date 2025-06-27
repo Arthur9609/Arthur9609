@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消除飢餓大作戰 - 全球糧食平衡（第5關）</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            background-image: url('https://images.unsplash.com/photo-1498837167922-ddd27525d352');
+            background-size: cover;
+            background-position: center;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #game-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        h1 {
+            color: #e74c3c;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #2c3e50;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        
+        #world-map {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/World_map_-_low_resolution.svg/1200px-World_map_-_low_resolution.svg.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin: 20px 0;
+        }
+        
+        .country {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(231, 76, 60, 0.7);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .country:hover {
+            transform: scale(1.2);
+            background-color: rgba(231, 76, 60, 0.9);
+        }
+        
+        #stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 25px 0;
+            font-size: 20px;
+            font-weight: bold;
+            background-color: rgba(46, 204, 113, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .stat {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            color: #e74c3c;
+        }
+        
+        #message {
+            min-height: 40px;
+            color: #e74c3c;
+            font-weight: bold;
+            margin: 15px 0;
+            font-size: 18px;
+        }
+        
+        #resource-panel {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        
+        .resource {
+            width: 80px;
+            height: 80px;
+            background-color: white;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 5px;
+        }
+        
+        .resource:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .resource-icon {
+            font-size: 30px;
+            margin-bottom: 5px;
+        }
+        
+        .resource-amount {
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        button {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px;
+        }
+        
+        button:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        #music-control {
+            margin-top: 20px;
+        }
+        
+        #game-over {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            flex-direction: column;
+            color: white;
+        }
+        
+        #game-over h2 {
+            font-size: 40px;
+            color: #f1c40f;
+            margin-bottom: 20px;
+        }
+        
+        .progress-container {
+            width: 80%;
+            height: 30px;
+            background-color: #ecf0f1;
+            border-radius: 15px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: #2ecc71;
+            width: 0%;
+            transition: width 0.5s;
+        }
+        
+        #restart-btn-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        
+        #restart-btn {
+            background-color: #3498db;
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+        
+        #restart-btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="restart-btn-container">
+            <button id="restart-btn">↻ 重新開始</button>
+        </div>
+        
+        <h1>消除飢餓大作戰</h1>
+        <div class="subtitle">全球糧食平衡 - 第5關</div>
+        <p>分配糧食資源到飢餓地區，達成全球糧食平衡！</p>
+        
+        <div id="stats">
+            <div class="stat">
+                <div>剩餘時間</div>
+                <div class="stat-value" id="time">120</div>
+            </div>
+            <div class="stat">
+                <div>糧食平衡度</div>
+                <div class="stat-value" id="balance">0%</div>
+            </div>
+            <div class="stat">
+                <div>幫助國家</div>
+                <div class="stat-value" id="countries">0/10</div>
+            </div>
+        </div>
+        
+        <div id="message">點擊開始遊戲按鈕，分配資源到地圖上的飢餓地區</div>
+        
+        <div id="resource-panel">
+            <div class="resource" id="resource1" data-type="train">
+                <div class="resource-icon">🚂</div>
+                <div>運輸系統</div>
+                <div class="resource-amount">x <span id="train-amount">3</span></div>
+            </div>
+            <div class="resource" id="resource2" data-type="money">
+                <div class="resource-icon">💰</div>
+                <div>資金援助</div>
+                <div class="resource-amount">x <span id="money-amount">5</span></div>
+            </div>
+            <div class="resource" id="resource3" data-type="food">
+                <div class="resource-icon">🌾</div>
+                <div>糧食援助</div>
+                <div class="resource-amount">x <span id="food-amount">8</span></div>
+            </div>
+            <div class="resource" id="resource4" data-type="tech">
+                <div class="resource-icon">📱</div>
+                <div>農業技術</div>
+                <div class="resource-amount">x <span id="tech-amount">4</span></div>
+            </div>
+        </div>
+        
+        <div id="world-map"></div>
+        
+        <button id="start-btn">開始遊戲</button>
+        
+        <div id="music-control">
+            <button id="music-toggle">背景音樂: 關閉</button>
+        </div>
+    </div>
+    
+    <div id="game-over">
+        <h2 id="result-title">遊戲結束</h2>
+        <div id="result-message"></div>
+        <div class="progress-container">
+            <div class="progress-bar" id="result-progress"></div>
+        </div>
+        <div id="result-stats"></div>
+        <button id="restart-end-btn">再玩一次</button>
+    </div>
+    
+    <audio id="bg-music" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" type="audio/mpeg">
+        您的瀏覽器不支持音頻元素。
+    </audio>
+    
+    <audio id="success-sound">
+        <source src="https://www.soundjay.com/buttons/sounds/button-21.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="fail-sound">
+        <source src="https://www.soundjay.com/buttons/sounds/button-10.mp3" type="audio/mpeg">
+    </audio>
+    
+    <script>
+        // 遊戲數據
+        const countries = [
+            { name: "非洲", x: 50, y: 60, needed: ["food", "tech", "money"] },
+            { name: "南亞", x: 75, y: 50, needed: ["food", "train", "money"] },
+            { name: "中東", x: 65, y: 40, needed: ["tech", "money"] },
+            { name: "南美", x: 30, y: 70, needed: ["food", "tech"] },
+            { name: "東南亞", x: 80, y: 55, needed: ["food", "train", "tech"] },
+            { name: "中美洲", x: 20, y: 55, needed: ["food", "money"] },
+            { name: "東歐", x: 60, y: 30, needed: ["tech", "train"] },
+            { name: "太平洋島國", x: 90, y: 70, needed: ["food", "money", "tech"] },
+            { name: "中亞", x: 70, y: 35, needed: ["train", "tech"] },
+            { name: "加勒比海", x: 25, y: 60, needed: ["food", "money"] }
+        ];
+        
+        // 遊戲狀態
+        let gameState = {
+            timeLeft: 120,
+            balance: 0,
+            helpedCountries: 0,
+            resources: {
+                train: 3,
+                money: 5,
+                food: 8,
+                tech: 4
+            },
+            selectedResource: null,
+            isGameRunning: false,
+            timer: null,
+            countryElements: []
+        };
+        
+        // DOM元素
+        const worldMap = document.getElementById('world-map');
+        const timeDisplay = document.getElementById('time');
+        const balanceDisplay = document.getElementById('balance');
+        const countriesDisplay = document.getElementById('countries');
+        const messageDisplay = document.getElementById('message');
+        const startBtn = document.getElementById('start-btn');
+        const musicToggle = document.getElementById('music-toggle');
+        const bgMusic = document.getElementById('bg-music');
+        const successSound = document.getElementById('success-sound');
+        const failSound = document.getElementById('fail-sound');
+        const gameOverScreen = document.getElementById('game-over');
+        const resultTitle = document.getElementById('result-title');
+        const resultMessage = document.getElementById('result-message');
+        const resultProgress = document.getElementById('result-progress');
+        const resultStats = document.getElementById('result-stats');
+        const restartEndBtn = document.getElementById('restart-end-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        
+        // 初始化遊戲
+        function initGame() {
+            // 重置遊戲狀態
+            gameState = {
+                timeLeft: 120,
+                balance: 0,
+                helpedCountries: 0,
+                resources: {
+                    train: 3,
+                    money: 5,
+                    food: 8,
+                    tech: 4
+                },
+                selectedResource: null,
+                isGameRunning: false,
+                timer: null,
+                countryElements: []
+            };
+            
+            // 更新UI
+            updateUI();
+            messageDisplay.textContent = "選擇一種資源，然後點擊地圖上的國家進行援助";
+            startBtn.textContent = "開始遊戲";
+            startBtn.disabled = false;
+            
+            // 清除地圖上的國家
+            worldMap.innerHTML = '';
+            
+            // 清除資源選擇狀態
+            document.querySelectorAll('.resource').forEach(res => {
+                res.style.boxShadow = 'none';
+            });
+            
+            // 創建國家元素
+            countries.forEach((country, index) => {
+                const countryElement = document.createElement('div');
+                countryElement.className = 'country';
+                countryElement.style.left = `${country.x}%`;
+                countryElement.style.top = `${country.y}%`;
+                countryElement.dataset.index = index;
+                countryElement.textContent = '🌍';
+                countryElement.addEventListener('click', () => helpCountry(index));
+                worldMap.appendChild(countryElement);
+                gameState.countryElements.push(countryElement);
+            });
+        }
+        
+        // 開始遊戲
+        function startGame() {
+            if (gameState.isGameRunning) return;
+            
+            initGame();
+            gameState.isGameRunning = true;
+            startBtn.textContent = '遊戲進行中...';
+            startBtn.disabled = true;
+            
+            // 自動播放背景音樂
+            bgMusic.play();
+            musicToggle.textContent = '背景音樂: 關閉';
+            isMusicPlaying = true;
+            
+            // 開始計時器
+            gameState.timer = setInterval(() => {
+                gameState.timeLeft--;
+                timeDisplay.textContent = gameState.timeLeft;
+                
+                if (gameState.timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+        
+        // 幫助國家
+        function helpCountry(countryIndex) {
+            if (!gameState.isGameRunning || !gameState.selectedResource) return;
+            
+            const country = countries[countryIndex];
+            const countryElement = gameState.countryElements[countryIndex];
+            
+            // 檢查是否是該國家需要的資源
+            if (country.needed.includes(gameState.selectedResource)) {
+                // 成功幫助
+                successSound.currentTime = 0;
+                successSound.play();
+                
+                // 減少資源
+                gameState.resources[gameState.selectedResource]--;
+                
+                // 更新國家狀態
+                countryElement.style.backgroundColor = 'rgba(46, 204, 113, 0.7)';
+                countryElement.textContent = getResourceIcon(gameState.selectedResource);
+                countryElement.onclick = null; // 移除點擊事件
+                
+                // 更新遊戲狀態
+                gameState.helpedCountries++;
+                gameState.balance += 10;
+                
+                // 檢查是否所有需求都滿足
+                if (isCountryFullyHelped(countryIndex)) {
+                    gameState.balance += 5; // 額外加分
+                    countryElement.style.boxShadow = '0 0 20px #f1c40f';
+                    messageDisplay.textContent = `成功幫助${country.name}解決糧食問題！`;
+                } else {
+                    messageDisplay.textContent = `向${country.name}提供了${getResourceName(gameState.selectedResource)}援助`;
+                }
+                
+                // 取消選中的資源
+                document.querySelector(`.resource[data-type="${gameState.selectedResource}"]`).style.boxShadow = 'none';
+                gameState.selectedResource = null;
+                
+                // 檢查是否贏得遊戲
+                if (gameState.helpedCountries >= 10) {
+                    endGame(true);
+                }
+            } else {
+                // 資源不匹配
+                failSound.currentTime = 0;
+                failSound.play();
+                messageDisplay.textContent = `${country.name}不需要${getResourceName(gameState.selectedResource)}，請選擇其他資源`;
+            }
+            
+            updateUI();
+        }
+        
+        // 檢查國家是否完全被幫助
+        function isCountryFullyHelped(countryIndex) {
+            const country = countries[countryIndex];
+            let neededCount = country.needed.length;
+            let helpedCount = 0;
+            
+            // 計算已提供的資源種類
+            for (const resource in gameState.resources) {
+                if (!country.needed.includes(resource)) continue;
+                if (gameState.resources[resource] < getInitialResource(resource)) {
+                    helpedCount++;
+                }
+            }
+            
+            return helpedCount >= neededCount;
+        }
+        
+        // 獲取初始資源數量
+        function getInitialResource(resource) {
+            const initialResources = { train: 3, money: 5, food: 8, tech: 4 };
+            return initialResources[resource];
+        }
+        
+        // 獲取資源名稱
+        function getResourceName(resource) {
+            const names = {
+                train: '運輸系統',
+                money: '資金援助',
+                food: '糧食援助',
+                tech: '農業技術'
+            };
+            return names[resource];
+        }
+        
+        // 獲取資源圖標
+        function getResourceIcon(resource) {
+            const icons = {
+                train: '🚂',
+                money: '💰',
+                food: '🌾',
+                tech: '📱'
+            };
+            return icons[resource];
+        }
+        
+        // 更新UI
+        function updateUI() {
+            timeDisplay.textContent = gameState.timeLeft;
+            balanceDisplay.textContent = `${gameState.balance}%`;
+            countriesDisplay.textContent = `${gameState.helpedCountries}/10`;
+            
+            // 更新資源數量
+            document.getElementById('train-amount').textContent = gameState.resources.train;
+            document.getElementById('money-amount').textContent = gameState.resources.money;
+            document.getElementById('food-amount').textContent = gameState.resources.food;
+            document.getElementById('tech-amount').textContent = gameState.resources.tech;
+        }
+        
+        // 結束遊戲
+        function endGame(isWin = false) {
+            clearInterval(gameState.timer);
+            gameState.isGameRunning = false;
+            
+            // 顯示遊戲結束畫面
+            gameOverScreen.style.display = 'flex';
+            
+            if (isWin || gameState.balance >= 80) {
+                resultTitle.textContent = '任務成功！';
+                resultMessage.textContent = '你成功改善了全球糧食平衡！';
+            } else {
+                resultTitle.textContent = '任務未完成';
+                resultMessage.textContent = '繼續努力，我們可以做得更好！';
+            }
+            
+            // 更新進度條和統計
+            resultProgress.style.width = `${gameState.balance}%`;
+            resultStats.innerHTML = `
+                <div>幫助國家: ${gameState.helpedCountries}/10</div>
+                <div>糧食平衡度: ${gameState.balance}%</div>
+                <div>剩餘時間: ${gameState.timeLeft}秒</div>
+            `;
+        }
+        
+        // 重新開始遊戲
+        function restartGame() {
+            // 停止所有音效
+            bgMusic.pause();
+            successSound.pause();
+            failSound.pause();
+            
+            // 隱藏遊戲結束畫面（如果正在顯示）
+            gameOverScreen.style.display = 'none';
+            
+            // 重置遊戲
+            initGame();
+        }
+        
+        // 完全重新開始遊戲（包括開始遊戲）
+        function fullRestartGame() {
+            restartGame();
+            startGame();
+        }
+        
+        // 音樂控制
+        let isMusicPlaying = false;
+        musicToggle.addEventListener('click', () => {
+            isMusicPlaying = !isMusicPlaying;
+            if (isMusicPlaying) {
+                bgMusic.play();
+                musicToggle.textContent = '背景音樂: 關閉';
+            } else {
+                bgMusic.pause();
+                musicToggle.textContent = '背景音樂: 開啟';
+            }
+        });
+        
+        // 設置資源點擊事件
+        document.querySelectorAll('.resource').forEach(resource => {
+            resource.addEventListener('click', function() {
+                if (!gameState.isGameRunning) return;
+                
+                const resourceType = this.dataset.type;
+                if (gameState.resources[resourceType] > 0) {
+                    // 取消之前選中的資源
+                    if (gameState.selectedResource) {
+                        document.getElementById(`resource${gameState.selectedResource}`).style.boxShadow = 'none';
+                    }
+                    
+                    gameState.selectedResource = resourceType;
+                    this.style.boxShadow = '0 0 15px #f1c40f';
+                    messageDisplay.textContent = `已選擇 ${getResourceName(resourceType)}，請點擊需要幫助的國家`;
+                } else {
+                    messageDisplay.textContent = `${getResourceName(resourceType)}已用完！`;
+                    failSound.currentTime = 0;
+                    failSound.play();
+                }
+            });
+        });
+        
+        // 事件監聽
+        startBtn.addEventListener('click', startGame);
+        restartEndBtn.addEventListener('click', fullRestartGame);
+        restartBtn.addEventListener('click', restartGame);
+        
+        // 初始化遊戲
+        initGame();
+    </script>
+</body>
+</html>

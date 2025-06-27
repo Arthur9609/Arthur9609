@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消除飢餓大作戰 - 第一關</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #game-container {
+            width: 800px;
+            height: 600px;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid #2c3e50;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/World_map_-_low_resolution.svg/1200px-World_map_-_low_resolution.svg.png');
+            background-size: cover;
+            background-position: center;
+        }
+        
+        #game-ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 50;
+            display: flex;
+            gap: 15px;
+        }
+        
+        button {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2ecc71;
+        }
+        
+        .food {
+            position: absolute;
+            font-size: 40px;
+            cursor: grab;
+            user-select: none;
+            transition: transform 0.2s;
+            z-index: 10;
+        }
+        
+        .food:hover {
+            transform: scale(1.1);
+        }
+        
+        .target-area {
+            position: absolute;
+            border: 2px dashed red;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: red;
+            font-weight: bold;
+            font-size: 12px;
+            text-align: center;
+            padding: 5px;
+            box-sizing: border-box;
+            z-index: 5;
+        }
+        
+        #level-complete {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="game-ui">
+            <div>分數: <span id="score-display">0</span>/100</div>
+            <button id="restart-level">重新開始</button>
+        </div>
+        
+        <div id="level-complete">
+            <h2>關卡完成！</h2>
+            <p>恭喜你達到100分！成功幫助飢餓地區。</p>
+            <p>最終分數: <span id="final-score">0</span></p>
+            <button id="next-level-btn">下一關</button>
+        </div>
+    </div>
+
+    <script>
+        // 遊戲變數
+        let score = 0;
+        let foodCount = 0;
+        
+        // 目標區域數據
+        const targetAreas = [
+            { id: 'africa', name: '非洲', top: '60%', left: '50%', width: '15%', height: '20%' },
+            { id: 'south-asia', name: '南亞', top: '55%', left: '75%', width: '12%', height: '15%' },
+            { id: 'latin-america', name: '拉丁美洲', top: '70%', left: '25%', width: '10%', height: '15%' }
+        ];
+        
+        // 食物類型
+        const foods = [
+            { type: '穀物', icon: '🌾' },
+            { type: '水果', icon: '🍎' },
+            { type: '蛋白質', icon: '🥩' },
+            { type: '乳製品', icon: '🧀' }
+        ];
+        
+        // 初始化遊戲
+        function initGame() {
+            // 設置事件監聽器
+            document.getElementById('restart-level').addEventListener('click', restartLevel);
+            document.getElementById('next-level-btn').addEventListener('click', goToNextLevel);
+            
+            // 開始遊戲
+            setupLevel();
+        }
+        
+        // 設置關卡
+        function setupLevel() {
+            // 重置分數
+            score = 0;
+            foodCount = 0;
+            
+            // 更新UI
+            updateUI();
+            
+            // 清除現有元素
+            clearGameElements();
+            
+            // 創建目標區域
+            createTargetAreas();
+            
+            // 初始創建3個食物
+            for (let i = 0; i < 3; i++) {
+                setTimeout(createFood, i * 500);
+            }
+        }
+        
+        // 創建目標區域
+        function createTargetAreas() {
+            targetAreas.forEach(area => {
+                const target = document.createElement('div');
+                target.className = 'target-area';
+                target.id = area.id;
+                target.style.top = area.top;
+                target.style.left = area.left;
+                target.style.width = area.width;
+                target.style.height = area.height;
+                target.textContent = area.name;
+                target.dataset.score = '10';
+                
+                // 設置拖放目標
+                target.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    target.style.backgroundColor = 'rgba(255, 0, 0, 0.2)';
+                });
+                
+                target.addEventListener('dragleave', () => {
+                    target.style.backgroundColor = 'transparent';
+                });
+                
+                target.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    target.style.backgroundColor = 'transparent';
+                    const foodId = e.dataTransfer.getData('text/plain');
+                    const food = document.getElementById(foodId);
+                    
+                    if (food) {
+                        // 動畫效果
+                        food.style.transition = 'all 0.5s';
+                        food.style.left = (target.offsetLeft + target.offsetWidth/2 - food.offsetWidth/2) + 'px';
+                        food.style.top = (target.offsetTop + target.offsetHeight/2 - food.offsetHeight/2) + 'px';
+                        food.style.transform = 'scale(0)';
+                        
+                        // 增加分數
+                        addScore(parseInt(target.dataset.score));
+                        
+                        // 移除食物元素
+                        setTimeout(() => {
+                            food.remove();
+                            foodCount--;
+                            
+                            // 檢查是否達到100分
+                            if (score >= 100) {
+                                completeLevel();
+                            } else if (foodCount < 5) { // 限制同時存在的食物數量
+                                createFood();
+                            }
+                        }, 500);
+                    }
+                });
+                
+                document.getElementById('game-container').appendChild(target);
+            });
+        }
+        
+        // 創建食物
+        function createFood() {
+            const food = foods[Math.floor(Math.random() * foods.length)];
+            const foodElement = document.createElement('div');
+            foodElement.className = 'food';
+            foodElement.textContent = food.icon;
+            foodElement.style.top = '10%';
+            foodElement.style.left = (10 + Math.random() * 80) + '%';
+            foodElement.id = 'food-' + Date.now();
+            foodElement.dataset.type = food.type;
+            
+            // 拖拽功能
+            foodElement.draggable = true;
+            
+            foodElement.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', e.target.id);
+                e.target.style.opacity = '0.5';
+            });
+            
+            foodElement.addEventListener('dragend', (e) => {
+                e.target.style.opacity = '1';
+            });
+            
+            document.getElementById('game-container').appendChild(foodElement);
+            foodCount++;
+        }
+        
+        // 增加分數
+        function addScore(points) {
+            score += points;
+            updateUI();
+        }
+        
+        // 更新UI
+        function updateUI() {
+            document.getElementById('score-display').textContent = score;
+            document.getElementById('final-score').textContent = score;
+        }
+        
+        // 完成關卡
+        function completeLevel() {
+            document.getElementById('level-complete').style.display = 'flex';
+        }
+        
+        // 重新開始關卡
+        function restartLevel() {
+            document.getElementById('level-complete').style.display = 'none';
+            setupLevel();
+        }
+        
+        // 前往下一關
+        function goToNextLevel() {
+            alert('恭喜完成第一關！在完整遊戲中，這將帶你前往第二關。');
+        }
+        
+        // 清除遊戲元素
+        function clearGameElements() {
+            const container = document.getElementById('game-container');
+            const elementsToRemove = [];
+            
+            // 收集要移除的元素
+            container.childNodes.forEach(child => {
+                if (child.id !== 'game-ui' && child.id !== 'level-complete') {
+                    elementsToRemove.push(child);
+                }
+            });
+            
+            // 移除元素
+            elementsToRemove.forEach(element => {
+                container.removeChild(element);
+            });
+        }
+        
+        // 初始化遊戲
+        window.onload = initGame;
+    </script>
+</body>
+</html>

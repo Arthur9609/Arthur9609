@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消除飢餓大作戰 - 第三關：營養知識問答</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            background-image: url('https://images.unsplash.com/photo-1498837167922-ddd27525d352?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-attachment: fixed;
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        #game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            color: #e67e22;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        #quiz-area {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        #question {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            line-height: 1.5;
+        }
+        
+        .option {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+        
+        .option:hover {
+            background-color: #2980b9;
+            transform: translateX(5px);
+        }
+        
+        #score-display {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #27ae60;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        #progress-bar {
+            height: 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        #progress {
+            height: 100%;
+            background-color: #e67e22;
+            width: 0%;
+            transition: width 0.5s;
+        }
+        
+        #controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        #next-btn {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        #next-btn:hover {
+            background-color: #27ae60;
+        }
+        
+        #restart-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        #restart-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        #music-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(255,255,255,0.8);
+            padding: 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 100;
+            font-size: 1.5em;
+        }
+        
+        .correct {
+            background-color: #2ecc71 !important;
+        }
+        
+        .incorrect {
+            background-color: #e74c3c !important;
+        }
+        
+        #fact-display {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-left: 5px solid #3498db;
+            display: none;
+        }
+        
+        #level-complete {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            background-color: rgba(255,255,255,0.9);
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        #level-complete h2 {
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>第三關：營養知識問答</h1>
+        
+        <div id="progress-bar">
+            <div id="progress"></div>
+        </div>
+        
+        <div id="score-display">分數: 0 | 問題: 1/10</div>
+        
+        <div id="quiz-area">
+            <div id="question"></div>
+            <div id="options"></div>
+            <div id="fact-display"></div>
+        </div>
+        
+        <div id="controls">
+            <button id="restart-btn">重新開始</button>
+            <button id="next-btn" disabled>下一題</button>
+        </div>
+        
+        <div id="level-complete">
+            <h2>關卡完成！</h2>
+            <p>恭喜你完成營養知識問答！</p>
+            <p>你的最終分數是: <span id="final-score">0</span>/100</p>
+            <button id="next-level-btn">下一關</button>
+        </div>
+    </div>
+
+    <div id="music-control">🔊</div>
+
+    <audio id="bg-music" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="correct-sound">
+        <source src="https://www.soundjay.com/buttons/sounds/button-21.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="wrong-sound">
+        <source src="https://www.soundjay.com/buttons/sounds/button-10.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="complete-sound">
+        <source src="https://www.soundjay.com/buttons/sounds/button-20.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // 遊戲數據
+        const questions = [
+            {
+                question: "什麼是「隱性飢餓」？",
+                options: [
+                    "微量營養素缺乏",
+                    "完全沒有食物攝取",
+                    "吃得太快",
+                    "只在夜間感到飢餓"
+                ],
+                answer: 0,
+                fact: "隱性飢餓指缺乏維生素和礦物質等微量營養素，即使攝入足夠熱量也會影響健康。全球約20億人受影響。"
+            },
+            {
+                question: "以下哪種食物組合能提供完整蛋白質？",
+                options: [
+                    "米飯 + 豆類",
+                    "只有米飯",
+                    "只有蔬菜",
+                    "水果 + 堅果"
+                ],
+                answer: 0,
+                fact: "米飯和豆類組合能提供所有必需氨基酸，形成完整蛋白質，對素食者特別重要。"
+            },
+            {
+                question: "哪種維生素缺乏會導致夜盲症？",
+                options: [
+                    "維生素A",
+                    "維生素C",
+                    "維生素D",
+                    "維生素B12"
+                ],
+                answer: 0,
+                fact: "維生素A缺乏是全球兒童可預防失明的主因，也存在於許多橙色蔬果中。"
+            },
+            {
+                question: "什麼是「食物安全」最重要的要素？",
+                options: [
+                    "食物無害且營養充足",
+                    "食物價格便宜",
+                    "食物外觀漂亮",
+                    "食物產量高"
+                ],
+                answer: 0,
+                fact: "食物安全包括食品安全、營養安全和糧食安全三個層面，缺一不可。"
+            },
+            {
+                question: "哪種礦物質缺乏會導致貧血？",
+                options: [
+                    "鐵",
+                    "鈣",
+                    "鋅",
+                    "鎂"
+                ],
+                answer: 0,
+                fact: "全球約25%人口有貧血問題，其中一半由缺鐵引起，影響兒童發育和成人工作效率。"
+            },
+            {
+                question: "強化食品的主要目的是什麼？",
+                options: [
+                    "補充特定營養素",
+                    "延長保存期限",
+                    "改善口感",
+                    "降低成本"
+                ],
+                answer: 0,
+                fact: "如加碘鹽、強化麵粉等，是解決微量營養素缺乏的經濟有效方法。"
+            },
+            {
+                question: "哪個年齡層營養不良影響最嚴重？",
+                options: [
+                    "6-24個月嬰幼兒",
+                    "學齡兒童",
+                    "青少年",
+                    "老年人"
+                ],
+                answer: 0,
+                fact: "生命最初1000天（從懷孕到2歲）是營養干預最關鍵的窗口期。"
+            },
+            {
+                question: "什麼是「營養敏感型農業」？",
+                options: [
+                    "生產營養豐富食物的農業系統",
+                    "使用化學肥料的農業",
+                    "大規模單一作物種植",
+                    "有機認證農業"
+                ],
+                answer: 0,
+                fact: "這種農業模式不僅追求產量，更注重生產多樣化、營養密集的食物。"
+            },
+            {
+                question: "全球糧食系統浪費約多少比例的食物？",
+                options: [
+                    "三分之一",
+                    "十分之一",
+                    "一半",
+                    "五分之一"
+                ],
+                answer: 0,
+                fact: "每年約13億噸食物被浪費，同時全球8.2億人挨餓，減少浪費是解決飢餓的重要途徑。"
+            },
+            {
+                question: "哪種飲食模式最符合永續發展目標？",
+                options: [
+                    "多樣化植物性飲食",
+                    "高肉類飲食",
+                    "加工食品為主",
+                    "單一作物飲食"
+                ],
+                answer: 0,
+                fact: "植物性飲食對環境負荷較小，同時多樣化能確保各種營養素攝取。"
+            }
+        ];
+
+        // 遊戲變數
+        let currentQuestion = 0;
+        let score = 0;
+        let bgMusic = document.getElementById('bg-music');
+        let isMusicPlaying = false;
+        let shuffledQuestions = [];
+
+        // 初始化遊戲
+        function initGame() {
+            // 洗牌問題
+            shuffledQuestions = shuffleArray([...questions]);
+            currentQuestion = 0;
+            score = 0;
+            
+            // 重置UI
+            document.getElementById('next-btn').disabled = true;
+            document.getElementById('level-complete').style.display = 'none';
+            document.getElementById('fact-display').style.display = 'none';
+            
+            // 載入問題
+            loadQuestion();
+            updateScore();
+            
+            // 設置音樂控制
+            setupMusic();
+        }
+        
+        // 設置音樂
+        function setupMusic() {
+            // 嘗試自動播放音樂（需要用戶互動後）
+            document.body.addEventListener('click', function() {
+                if (!isMusicPlaying) {
+                    bgMusic.volume = 0.3;
+                    bgMusic.play().then(() => {
+                        isMusicPlaying = true;
+                        document.getElementById('music-control').textContent = '🔊';
+                    }).catch(e => {
+                        console.log("自動播放被阻止，需要用戶互動");
+                    });
+                }
+            }, { once: true });
+            
+            // 音樂控制按鈕
+            document.getElementById('music-control').addEventListener('click', function() {
+                if (isMusicPlaying) {
+                    bgMusic.pause();
+                    this.textContent = '🔇';
+                } else {
+                    bgMusic.play();
+                    this.textContent = '🔊';
+                }
+                isMusicPlaying = !isMusicPlaying;
+            });
+        }
+        
+        // 載入問題
+        function loadQuestion() {
+            const questionObj = shuffledQuestions[currentQuestion];
+            document.getElementById('question').textContent = questionObj.question;
+            
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            
+            questionObj.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option';
+                button.textContent = option;
+                button.dataset.index = index;
+                button.addEventListener('click', selectAnswer);
+                optionsContainer.appendChild(button);
+            });
+            
+            // 更新進度條
+            const progress = ((currentQuestion) / questions.length) * 100;
+            document.getElementById('progress').style.width = progress + '%';
+        }
+        
+        // 選擇答案
+        function selectAnswer(e) {
+            const selectedButton = e.target;
+            const correctIndex = shuffledQuestions[currentQuestion].answer;
+            const selectedIndex = parseInt(selectedButton.dataset.index);
+            
+            // 禁用所有選項
+            document.querySelectorAll('.option').forEach(button => {
+                button.disabled = true;
+                if (parseInt(button.dataset.index) === correctIndex) {
+                    button.classList.add('correct');
+                }
+            });
+            
+            // 檢查答案
+            if (selectedIndex === correctIndex) {
+                selectedButton.classList.add('correct');
+                score += 10;
+                document.getElementById('correct-sound').play();
+            } else {
+                selectedButton.classList.add('incorrect');
+                document.getElementById('wrong-sound').play();
+            }
+            
+            // 顯示知識點
+            const factDisplay = document.getElementById('fact-display');
+            factDisplay.textContent = shuffledQuestions[currentQuestion].fact;
+            factDisplay.style.display = 'block';
+            
+            // 啟用下一題按鈕
+            document.getElementById('next-btn').disabled = false;
+            
+            updateScore();
+        }
+        
+        // 下一題
+        function nextQuestion() {
+            currentQuestion++;
+            
+            if (currentQuestion < shuffledQuestions.length) {
+                document.getElementById('next-btn').disabled = true;
+                document.getElementById('fact-display').style.display = 'none';
+                loadQuestion();
+            } else {
+                completeLevel();
+            }
+        }
+        
+        // 完成關卡
+        function completeLevel() {
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('quiz-area').style.display = 'none';
+            document.getElementById('controls').style.display = 'none';
+            document.getElementById('level-complete').style.display = 'block';
+            document.getElementById('complete-sound').play();
+            
+            // 更新進度條
+            document.getElementById('progress').style.width = '100%';
+        }
+        
+        // 更新分數
+        function updateScore() {
+            document.getElementById('score-display').textContent = `分數: ${score} | 問題: ${currentQuestion + 1}/${questions.length}`;
+        }
+        
+        // 洗牌陣列
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+        
+        // 事件監聽器
+        document.getElementById('next-btn').addEventListener('click', nextQuestion);
+        document.getElementById('restart-btn').addEventListener('click', initGame);
+        document.getElementById('next-level-btn').addEventListener('click', function() {
+            alert('恭喜完成本關！在完整遊戲中將進入下一關。');
+        });
+        
+        // 初始化遊戲
+        initGame();
+    
+    </script>
+</body>
+</html>

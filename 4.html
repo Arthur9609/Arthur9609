@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消除飢餓大作戰 - 第四關：食物救援行動</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            background-image: url('https://images.unsplash.com/photo-1461354464878-ad92f492a5a0?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-attachment: fixed;
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        #game-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            color: #e74c3c;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        #network-map {
+            width: 100%;
+            height: 500px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            position: relative;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .node {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            padding: 5px;
+            box-sizing: border-box;
+        }
+        
+        .source {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .destination {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .connection {
+            position: absolute;
+            height: 3px;
+            background-color: #f1c40f;
+            transform-origin: 0 0;
+            z-index: 1;
+        }
+        
+        #resource-panel {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .resource {
+            display: inline-block;
+            margin: 5px;
+            padding: 8px 15px;
+            background-color: #2ecc71;
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        #score-panel {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        #controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 12px 25px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Microsoft JhengHei', sans-serif;
+        }
+        
+        #next-level-btn {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        #next-level-btn:hover {
+            background-color: #27ae60;
+        }
+        
+        #restart-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        #restart-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        #music-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(255,255,255,0.8);
+            padding: 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 100;
+            font-size: 1.5em;
+        }
+        
+        #level-complete {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            background-color: rgba(255,255,255,0.95);
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        #level-complete h2 {
+            color: #27ae60;
+        }
+        
+        .selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.8);
+        }
+        
+        #tutorial {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        
+        #resource-count {
+            font-weight: bold;
+            color: #e67e22;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>第四關：食物救援行動</h1>
+        
+        <div id="tutorial">
+            <p>建立食物救援網絡，將<span style="color:#3498db;font-weight:bold">餐廳/超市</span>的多餘食物運送到<span style="color:#e74c3c;font-weight:bold">食物銀行/庇護所</span>！</p>
+            <p>點擊選擇一個來源點，再點擊目標點建立連接。你目前有 <span id="resource-count">5</span> 個運輸資源。</p>
+            <p>每個成功連接可獲得20分，滿分100分完成關卡！</p> <!-- 修改了分數說明 -->
+        </div>
+        
+        <div id="network-map"></div>
+        
+        <div id="score-panel">
+            分數: <span id="score-display">0</span>/100 | 
+            已建立連接: <span id="connections-display">0</span> | 
+            剩餘資源: <span id="resources-display">5</span>
+        </div>
+        
+        <div id="controls">
+            <button id="restart-btn">重新開始</button>
+        </div>
+        
+        <div id="level-complete">
+            <h2>救援網絡完成！</h2>
+            <p>你成功建立了食物救援網絡！</p>
+            <p>你的最終分數是: <span id="final-score">0</span>/100</p> <!-- 添加了總分顯示 -->
+            <button id="next-level-btn">下一關</button>
+        </div>
+    </div>
+
+    <div id="music-control">🔊</div>
+
+    <audio id="bg-music" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="connect-sound">
+        <source src="https://www.soundjay.com/buttons/sounds/button-21.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="error-sound">
+        <source src="https://www.soundjay.com/buttons/sounds/button-10.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="complete-sound">
+        <source src="https://www.soundjay.com/buttons/sounds/button-20.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // 遊戲數據
+        const nodes = [
+            { id: 'restaurant1', name: '海鮮餐廳', type: 'source', top: '20%', left: '15%', connections: 2 },
+            { id: 'restaurant2', name: '素食餐廳', type: 'source', top: '40%', left: '25%', connections: 1 },
+            { id: 'supermarket1', name: '有機超市', type: 'source', top: '30%', left: '75%', connections: 2 },
+            { id: 'supermarket2', name: '社區超市', type: 'source', top: '10%', left: '65%', connections: 1 },
+            { id: 'foodbank1', name: '城東食物銀行', type: 'destination', top: '70%', left: '30%', connections: 2 },
+            { id: 'foodbank2', name: '城西食物銀行', type: 'destination', top: '80%', left: '60%', connections: 2 },
+            { id: 'shelter1', name: '兒童庇護所', type: 'destination', top: '60%', left: '20%', connections: 1 },
+            { id: 'shelter2', name: '長者中心', type: 'destination', top: '50%', left: '80%', connections: 1 }
+        ];
+
+        // 遊戲變數
+        let score = 0;
+        let resources = 5;
+        let connections = [];
+        let selectedNode = null;
+        let bgMusic = document.getElementById('bg-music');
+        let isMusicPlaying = false;
+
+        // 初始化遊戲
+        function initGame() {
+            // 重置遊戲狀態
+            score = 0;
+            resources = 5;
+            connections = [];
+            selectedNode = null;
+            
+            // 更新UI
+            updateUI();
+            
+            // 清空地圖
+            document.getElementById('network-map').innerHTML = '';
+            document.getElementById('level-complete').style.display = 'none';
+            document.getElementById('controls').style.display = 'flex';
+            
+            // 創建節點
+            createNodes();
+            
+            // 設置音樂控制
+            setupMusic();
+        }
+        
+        // 設置音樂
+        function setupMusic() {
+            // 嘗試自動播放音樂（需要用戶互動後）
+            document.body.addEventListener('click', function() {
+                if (!isMusicPlaying) {
+                    bgMusic.volume = 0.3;
+                    bgMusic.play().then(() => {
+                        isMusicPlaying = true;
+                        document.getElementById('music-control').textContent = '🔊';
+                    }).catch(e => {
+                        console.log("自動播放被阻止，需要用戶互動");
+                    });
+                }
+            }, { once: true });
+            
+            // 音樂控制按鈕
+            document.getElementById('music-control').addEventListener('click', function() {
+                if (isMusicPlaying) {
+                    bgMusic.pause();
+                    this.textContent = '🔇';
+                } else {
+                    bgMusic.play();
+                    this.textContent = '🔊';
+                }
+                isMusicPlaying = !isMusicPlaying;
+            });
+        }
+        
+        // 創建節點
+        function createNodes() {
+            nodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.id = node.id;
+                nodeElement.className = `node ${node.type}`;
+                nodeElement.style.top = node.top;
+                nodeElement.style.left = node.left;
+                nodeElement.textContent = node.name;
+                
+                nodeElement.addEventListener('click', () => selectNode(node.id));
+                
+                document.getElementById('network-map').appendChild(nodeElement);
+            });
+        }
+        
+        // 選擇節點
+        function selectNode(nodeId) {
+            const node = nodes.find(n => n.id === nodeId);
+            const nodeElement = document.getElementById(nodeId);
+            
+            // 如果沒有選中的節點
+            if (!selectedNode) {
+                // 只能選擇來源點作為第一個節點
+                if (node.type === 'source' && node.connections > 0) {
+                    selectedNode = nodeId;
+                    nodeElement.classList.add('selected');
+                    document.getElementById('connect-sound').play();
+                } else {
+                    document.getElementById('error-sound').play();
+                }
+            } 
+            // 如果已經選了一個節點
+            else {
+                const firstNode = nodes.find(n => n.id === selectedNode);
+                const firstElement = document.getElementById(selectedNode);
+                
+                // 檢查是否選擇了不同的節點
+                if (nodeId !== selectedNode) {
+                    // 檢查是否為有效的來源-目標連接
+                    if ((firstNode.type === 'source' && node.type === 'destination') || 
+                        (firstNode.type === 'destination' && node.type === 'source')) {
+                        
+                        // 檢查是否還有可用連接
+                        if (firstNode.connections > 0 && node.connections > 0 && resources > 0) {
+                            // 檢查是否已存在連接
+                            const connectionExists = connections.some(conn => 
+                                (conn.from === selectedNode && conn.to === nodeId) || 
+                                (conn.from === nodeId && conn.to === selectedNode));
+                            
+                            if (!connectionExists) {
+                                // 創建連接
+                                createConnection(selectedNode, nodeId);
+                                
+                                // 減少可用連接數
+                                firstNode.connections--;
+                                node.connections--;
+                                resources--;
+                                
+                                // 增加分數（改為每次20分）
+                                score += 20;
+                                document.getElementById('connect-sound').play();
+                                
+                                // 檢查是否完成所有可能連接或達到滿分
+                                if (score >= 100) {
+                                    score = 100; // 確保分數不超過100
+                                    completeLevel();
+                                } else {
+                                    checkCompletion();
+                                }
+                            } else {
+                                document.getElementById('error-sound').play();
+                            }
+                        } else {
+                            document.getElementById('error-sound').play();
+                        }
+                    } else {
+                        document.getElementById('error-sound').play();
+                    }
+                }
+                
+                // 重置選擇
+                firstElement.classList.remove('selected');
+                selectedNode = null;
+                updateUI();
+            }
+        }
+        
+        // 創建連接線
+        function createConnection(fromId, toId) {
+            const fromElement = document.getElementById(fromId);
+            const toElement = document.getElementById(toId);
+            
+            const fromRect = fromElement.getBoundingClientRect();
+            const toRect = toElement.getBoundingClientRect();
+            
+            const mapRect = document.getElementById('network-map').getBoundingClientRect();
+            
+            const fromX = fromRect.left - mapRect.left + fromRect.width / 2;
+            const fromY = fromRect.top - mapRect.top + fromRect.height / 2;
+            const toX = toRect.left - mapRect.left + toRect.width / 2;
+            const toY = toRect.top - mapRect.top + toRect.height / 2;
+            
+            const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+            const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+            
+            const connection = document.createElement('div');
+            connection.className = 'connection';
+            connection.style.left = fromX + 'px';
+            connection.style.top = fromY + 'px';
+            connection.style.width = length + 'px';
+            connection.style.transform = 'rotate(' + angle + 'deg)';
+            
+            document.getElementById('network-map').appendChild(connection);
+            
+            // 保存連接
+            connections.push({
+                from: fromId,
+                to: toId,
+                element: connection
+            });
+            
+            updateUI();
+        }
+        
+        // 檢查是否完成
+        function checkCompletion() {
+            // 檢查是否所有來源點都用完連接
+            const allSourcesUsed = nodes.filter(n => n.type === 'source').every(n => n.connections === 0);
+            // 或所有目標點都用完連接
+            const allDestinationsUsed = nodes.filter(n => n.type === 'destination').every(n => n.connections === 0);
+            // 或用完所有資源
+            const resourcesUsed = resources === 0;
+            
+            if (allSourcesUsed || allDestinationsUsed || resourcesUsed) {
+                completeLevel();
+            }
+        }
+        
+        // 完成關卡
+        function completeLevel() {
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('level-complete').style.display = 'block';
+            document.getElementById('controls').style.display = 'none';
+            document.getElementById('complete-sound').play();
+        }
+        
+        // 更新UI
+        function updateUI() {
+            document.getElementById('score-display').textContent = score;
+            document.getElementById('connections-display').textContent = connections.length;
+            document.getElementById('resources-display').textContent = resources;
+            document.getElementById('resource-count').textContent = resources;
+        }
+        
+        // 事件監聽器
+        document.getElementById('restart-btn').addEventListener('click', initGame);
+        document.getElementById('next-level-btn').addEventListener('click', function() {
+            alert('恭喜完成本關！在完整遊戲中將進入下一關。');
+        });
+        
+        // 初始化遊戲
+        initGame();
+    </script>
+</body>
+</html>
